@@ -127,38 +127,16 @@ public class AppRegistry {
 	}
 
 	public List<AppRegistration> importAll(boolean overwrite, Resource... resources) {
-		Set<String> keysAlreadyThere = overwrite ? Collections.emptySet() : uriRegistry.findAll().keySet();
+		Set<String> registeredKeys = overwrite ? Collections.emptySet() : uriRegistry.findAll().keySet();
 
-		List<AppRegistration> apps = Stream.of(resources)
+		return Stream.of(resources)
 			.map(this::loadProperties)
 			.flatMap(prop -> prop.entrySet().stream()
 					.map(toStringAndUriFUNC)
 					.flatMap(kv -> toValidAppRegistration(kv, metadataUriFromProperties(kv.getKey(), prop)))
-					.filter(ar -> !keysAlreadyThere.contains(key(ar.getName(), ar.getType())))
+					.filter(ar -> !registeredKeys.contains(key(ar.getName(), ar.getType())))
 					.map(ar -> save(ar.getName(), ar.getType(), ar.getUri(), ar.getMetadataUri()))
 			).collect(Collectors.toList());
-		return apps;
-
-
-
-
-
-//		List<AppRegistration> apps = null;
-//		for (Resource resource : resources) {
-//			try  {
-//				Properties properties = PropertiesLoaderUtils.loadProperties(resource);
-//				apps = properties.entrySet().stream()
-//					    .map(toStringAndUriFUNC)
-//						.flatMap(kv -> toValidAppRegistration(kv, metadataUriFromProperties(kv.getKey(), properties)))
-//						.filter(ar -> !keysAlreadyThere.contains(key(ar.getName(), ar.getType())))
-//						.map(ar -> save(ar.getName(), ar.getType(), ar.getUri(), ar.getMetadataUri()))
-//						.collect(Collectors.toList());
-//			}
-//			catch (IOException e) {
-//				throw new RuntimeException("Error reading from " + resource.getDescription(), e);
-//			}
-//		}
-//		return apps;
 	}
 
 	private Properties loadProperties(Resource resource) {
