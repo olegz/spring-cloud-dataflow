@@ -32,6 +32,6 @@ import org.springframework.cloud.dataflow.server.EnableDataFlowServer;
 public class LocalDataFlowServer {
 
 	public static void main(String[] args) {
-		SpringApplication.run(LocalDataFlowServer.class, args);
+		SpringApplication.run(LocalDataFlowServer.class, "--debug");
 	}
 }

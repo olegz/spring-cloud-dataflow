@@ -1,0 +1,37 @@
+DSL provides programatic shell experience and delegates to a pre-configured StreamDeployer via "deploy(..)" operation returning a handle to the deployed stream:
+
+SCDFStream stream = SCDFStream.name("TICKTOCK")
+         .definition("time | log")
+         .deploy("app.log.log.expression='TICKTOCK - TIMESTAMP: '.concat(payload)");
+        
+stream.undeploy();
+
+The "deploy(..)” operation will start the DF as boot application (SimpleSCDFStream) with data flow definition passed as JSON property to the boot app (--streamDefinition)
+
+{
+  "name": "TICKTOCK",
+  "definition": "time | log",
+  "deployment.properties": {
+    "app.log.log.expression": "'TICKTOCK - TIMESTAMP: '.concat(payload)"
+  }
+}
+
+Doing it as boot app provides for greater flexibility such as
+    - ability to determine via custom conditional annotation if SCDF stream can be deployed (i.e., check if the SCDF server is running and is reachable)
+    - override default local deployer 
+    - Provide @ConfigurationProperties - hence IDE support etc
+    
+
+SimpleSCDFStream (default implementation of SCDFStream) is preconfigured (auto wired) with instance of StreamDeployer as “DefaultLocalDeployer” to deploy via local SCDF server. It is configured via ‘spring.factories’ inside DSL module.
+This means that it can be overridden via ‘spring.factories’ a the time of usage (e.g., for testing where you wan to provide additional properties for logs to monitor etc)
+
+    org.springframework.cloud.dataflow.dsl.java.StreamDeployer=org.springframework.cloud.dataflow.acceptance.test.TestStreamDeployer
+
+
+class SimpleSCDFStream implements SCDFStream, ApplicationContextAware {
+    . . .
+
+    @Autowired
+    private StreamDeployer streamDeployer;
+
+So this way you can independently manage how the actual stream is deployed and potentially have deployers for non-local deployments (e.g., Docker, PCF etc)
